@@ -56,48 +56,50 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decorations */}
+    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
+      {/* Background decorations - Mobile optimized */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary-300 rounded-full blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute -top-20 -right-20 w-40 h-40 sm:w-80 sm:h-80 bg-primary-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 sm:w-80 sm:h-80 bg-primary-300 rounded-full blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Back button */}
-        <Link href="/login" className="inline-flex items-center gap-2 text-secondary-600 hover:text-primary-500 mb-8 transition-colors group">
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Retour à la connexion</span>
+        {/* Back button - Mobile optimized */}
+        <Link href="/login" className="inline-flex items-center gap-2 text-secondary-600 hover:text-primary-500 mb-4 sm:mb-8 transition-colors group text-sm sm:text-base">
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="hidden sm:inline">Retour à la connexion</span>
+          <span className="sm:hidden">Retour</span>
         </Link>
 
         <Card className="animate-fadeIn">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Logo size="lg" />
+          {/* Header - Mobile optimized */}
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <Logo size="md" />
             </div>
-            <h1 className="text-3xl font-bold text-secondary-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-secondary-900 mb-1 sm:mb-2">
               Mot de passe oublié ? 🔐
             </h1>
-            <p className="text-secondary-600">
+            <p className="text-sm sm:text-base text-secondary-600">
               Pas de souci, on va vous aider à le récupérer
             </p>
           </div>
 
           {!sent ? (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <Input
                 type="email"
                 label="Adresse email"
                 placeholder="votre@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                icon={<Mail className="w-5 h-5" />}
+                icon={<Mail className="w-4 h-4 sm:w-5 sm:h-5" />}
                 error={error}
                 disabled={loading}
               />
 
-              <div className="p-4 bg-primary-50 rounded-lg">
-                <p className="text-sm text-secondary-700">
+              <div className="p-3 sm:p-4 bg-primary-50 rounded-lg">
+                <p className="text-xs sm:text-sm text-secondary-700">
                   Nous vous enverrons un lien de réinitialisation par email.
                   Vérifiez aussi vos spams ! 📬
                 </p>
@@ -105,7 +107,7 @@ export default function ForgotPasswordPage() {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full text-sm sm:text-base"
                 size="lg"
                 loading={loading}
               >
@@ -113,25 +115,25 @@ export default function ForgotPasswordPage() {
               </Button>
             </form>
           ) : (
-            <div className="text-center space-y-6 animate-fadeIn">
-              <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8 text-success" />
+            <div className="text-center space-y-4 sm:space-y-6 animate-fadeIn">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-success" />
               </div>
               
               <div>
-                <h2 className="text-xl font-bold text-secondary-900 mb-2">
+                <h2 className="text-lg sm:text-xl font-bold text-secondary-900 mb-1 sm:mb-2">
                   Email envoyé ! 📧
                 </h2>
-                <p className="text-secondary-600">
+                <p className="text-sm sm:text-base text-secondary-600 px-2">
                   Vérifiez votre boîte mail <span className="font-semibold text-primary-500">{email}</span>
                 </p>
               </div>
 
-              <div className="p-4 bg-primary-50 rounded-lg text-left space-y-2">
-                <p className="text-sm text-secondary-700 font-semibold">
+              <div className="p-3 sm:p-4 bg-primary-50 rounded-lg text-left space-y-1.5 sm:space-y-2">
+                <p className="text-xs sm:text-sm text-secondary-700 font-semibold">
                   Vous n&apos;avez pas reçu l&apos;email ?
                 </p>
-                <ul className="text-sm text-secondary-600 space-y-1">
+                <ul className="text-xs sm:text-sm text-secondary-600 space-y-1">
                   <li>• Vérifiez vos spams</li>
                   <li>• Attendez quelques minutes</li>
                   <li>• Vérifiez l&apos;orthographe de votre email</li>
@@ -141,17 +143,17 @@ export default function ForgotPasswordPage() {
               <Button
                 onClick={() => setSent(false)}
                 variant="outline"
-                className="w-full"
+                className="w-full text-sm sm:text-base"
               >
                 Renvoyer l&apos;email
               </Button>
             </div>
           )}
 
-          <div className="mt-6 text-center">
+          <div className="mt-4 sm:mt-6 text-center">
             <Link
               href="/login"
-              className="text-sm text-primary-500 hover:text-primary-600 font-semibold transition-colors"
+              className="text-xs sm:text-sm text-primary-500 hover:text-primary-600 font-semibold transition-colors"
             >
               Retour à la connexion
             </Link>

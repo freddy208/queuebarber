@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -169,33 +170,34 @@ function CreateSalonContent() {
     <div className="min-h-screen bg-secondary-50">
       <DashboardHeader />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        {/* Back button - Mobile optimized */}
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-secondary-600 hover:text-primary-500 mb-8 transition-colors group"
+          className="inline-flex items-center gap-2 text-secondary-600 hover:text-primary-500 mb-4 sm:mb-8 transition-colors group text-sm sm:text-base"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span>Retour au dashboard</span>
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="hidden sm:inline">Retour au dashboard</span>
+          <span className="sm:hidden">Retour</span>
         </Link>
 
-        {/* Progress steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        {/* Progress steps - Mobile optimized */}
+        <div className="mb-4 sm:mb-8">
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center flex-1">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-sm sm:text-base ${
                     step >= s
                       ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-medium'
                       : 'bg-secondary-200 text-secondary-500'
                   }`}
                 >
-                  {step > s ? <CheckCircle2 className="w-6 h-6" /> : s}
+                  {step > s ? <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" /> : s}
                 </div>
                 {s < 3 && (
                   <div
-                    className={`h-1 flex-1 mx-2 rounded transition-all ${
+                    className={`h-1 flex-1 mx-1 sm:mx-2 rounded transition-all ${
                       step > s ? 'bg-primary-500' : 'bg-secondary-200'
                     }`}
                   ></div>
@@ -203,28 +205,30 @@ function CreateSalonContent() {
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-xs sm:text-sm">
             <span className={step >= 1 ? 'text-primary-500 font-semibold' : 'text-secondary-500'}>
-              Informations
+              <span className="hidden sm:inline">Informations</span>
+              <span className="sm:hidden">Infos</span>
             </span>
             <span className={step >= 2 ? 'text-primary-500 font-semibold' : 'text-secondary-500'}>
               Services
             </span>
             <span className={step >= 3 ? 'text-primary-500 font-semibold' : 'text-secondary-500'}>
-              Confirmation
+              <span className="hidden sm:inline">Confirmation</span>
+              <span className="sm:hidden">Confirmer</span>
             </span>
           </div>
         </div>
 
-        <Card>
+        <Card className="p-3 sm:p-4">
           {/* Step 1: Salon Info */}
           {step === 1 && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-4 sm:space-y-6 animate-fadeIn">
               <div>
-                <h2 className="text-2xl font-bold text-secondary-900 mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-secondary-900 mb-1 sm:mb-2">
                   Informations du salon
                 </h2>
-                <p className="text-secondary-600">
+                <p className="text-xs sm:text-base text-secondary-600">
                   Ces informations seront visibles par vos clients
                 </p>
               </div>
@@ -234,17 +238,17 @@ function CreateSalonContent() {
                 placeholder="Ex: Salon Freddy"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                icon={<Store className="w-5 h-5" />}
+                icon={<Store className="w-4 h-4 sm:w-5 sm:h-5" />}
                 error={errors.name}
               />
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <Input
                   label="Ville *"
                   placeholder="Ex: Douala"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  icon={<MapPin className="w-5 h-5" />}
+                  icon={<MapPin className="w-4 h-4 sm:w-5 sm:h-5" />}
                   error={errors.city}
                 />
 
@@ -253,7 +257,7 @@ function CreateSalonContent() {
                   placeholder="Ex: 677123456"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  icon={<Phone className="w-5 h-5" />}
+                  icon={<Phone className="w-4 h-4 sm:w-5 sm:h-5" />}
                   error={errors.phone}
                 />
               </div>
@@ -263,7 +267,7 @@ function CreateSalonContent() {
                 placeholder="Ex: Akwa, face Total"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                icon={<MapPin className="w-5 h-5" />}
+                icon={<MapPin className="w-4 h-4 sm:w-5 sm:h-5" />}
               />
 
               <Input
@@ -271,16 +275,16 @@ function CreateSalonContent() {
                 placeholder="Ex: 677123456"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
-                icon={<Phone className="w-5 h-5" />}
+                icon={<Phone className="w-4 h-4 sm:w-5 sm:h-5" />}
               />
 
-              <div className="p-4 bg-primary-50 rounded-lg">
-                <p className="text-sm text-secondary-700">
+              <div className="p-3 sm:p-4 bg-primary-50 rounded-lg">
+                <p className="text-xs sm:text-sm text-secondary-700">
                   💡 <strong>Conseil :</strong> Ajoutez un numéro WhatsApp pour que vos clients puissent vous contacter facilement en cas de problème.
                 </p>
               </div>
 
-              <Button onClick={handleNext} size="lg" className="w-full">
+              <Button onClick={handleNext} size="lg" className="w-full text-sm sm:text-base">
                 Continuer
               </Button>
             </div>
@@ -288,35 +292,36 @@ function CreateSalonContent() {
 
           {/* Step 2: Services */}
           {step === 2 && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-4 sm:space-y-6 animate-fadeIn">
               <div>
-                <h2 className="text-2xl font-bold text-secondary-900 mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-secondary-900 mb-1 sm:mb-2">
                   Services proposés
                 </h2>
-                <p className="text-secondary-600">
+                <p className="text-xs sm:text-base text-secondary-600">
                   Ajoutez les services que vous proposez avec leur durée
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {services.map((service, index) => (
                   <div
                     key={service.id}
-                    className="p-4 border-2 border-secondary-200 rounded-lg hover:border-primary-300 transition-colors"
+                    className="p-3 sm:p-4 border-2 border-secondary-200 rounded-lg hover:border-primary-300 transition-colors"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 space-y-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="flex-1 space-y-2 sm:space-y-3">
                         <Input
                           placeholder="Nom du service (ex: Coupe homme)"
                           value={service.name}
                           onChange={(e) =>
                             updateService(service.id, 'name', e.target.value)
                           }
+                          className="text-sm sm:text-base"
                         />
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
                           <div>
-                            <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                              Durée (minutes) *
+                            <label className="block text-xs sm:text-sm font-semibold text-secondary-700 mb-1 sm:mb-2">
+                              Durée (min) *
                             </label>
                             <Input
                               type="number"
@@ -329,12 +334,13 @@ function CreateSalonContent() {
                                   parseInt(e.target.value) || 0
                                 )
                               }
-                              icon={<Clock className="w-5 h-5" />}
+                              icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5" />}
+                              className="text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                              Prix (FCFA, optionnel)
+                            <label className="block text-xs sm:text-sm font-semibold text-secondary-700 mb-1 sm:mb-2">
+                              Prix (FCFA)
                             </label>
                             <Input
                               type="number"
@@ -347,6 +353,7 @@ function CreateSalonContent() {
                                   parseInt(e.target.value) || undefined
                                 )
                               }
+                              className="text-sm"
                             />
                           </div>
                         </div>
@@ -355,7 +362,7 @@ function CreateSalonContent() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeService(service.id)}
-                        className="text-error hover:bg-red-50 mt-2"
+                        className="text-error hover:bg-red-50 mt-1 sm:mt-2 px-2"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -367,21 +374,21 @@ function CreateSalonContent() {
               <Button
                 variant="outline"
                 onClick={addService}
-                icon={<Plus className="w-5 h-5" />}
-                className="w-full"
+                icon={<Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
+                className="w-full text-sm sm:text-base"
               >
                 Ajouter un service
               </Button>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setStep(1)}
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base"
                 >
                   Retour
                 </Button>
-                <Button onClick={handleNext} className="flex-1">
+                <Button onClick={handleNext} className="flex-1 text-sm sm:text-base">
                   Continuer
                 </Button>
               </div>
@@ -390,25 +397,25 @@ function CreateSalonContent() {
 
           {/* Step 3: Confirmation */}
           {step === 3 && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-4 sm:space-y-6 animate-fadeIn">
               <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-secondary-900 mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-secondary-900 mb-1 sm:mb-2">
                   Récapitulatif
                 </h2>
-                <p className="text-secondary-600">
+                <p className="text-xs sm:text-base text-secondary-600">
                   Vérifiez les informations avant de créer votre salon
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div className="p-4 bg-secondary-50 rounded-lg">
-                  <h3 className="font-bold text-secondary-900 mb-3">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="p-3 sm:p-4 bg-secondary-50 rounded-lg">
+                  <h3 className="font-bold text-secondary-900 mb-2 sm:mb-3 text-sm sm:text-base">
                     Informations du salon
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <p><strong>Nom:</strong> {name}</p>
                     <p><strong>Ville:</strong> {city}</p>
                     <p><strong>Téléphone:</strong> {phone}</p>
@@ -417,15 +424,15 @@ function CreateSalonContent() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-secondary-50 rounded-lg">
-                  <h3 className="font-bold text-secondary-900 mb-3">
+                <div className="p-3 sm:p-4 bg-secondary-50 rounded-lg">
+                  <h3 className="font-bold text-secondary-900 mb-2 sm:mb-3 text-sm sm:text-base">
                     Services ({services.length})
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {services.map((service, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between text-sm"
+                        className="flex items-center justify-between text-xs sm:text-sm"
                       >
                         <span>{service.name}</span>
                         <span className="text-secondary-600">
@@ -437,25 +444,25 @@ function CreateSalonContent() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-primary-50 rounded-lg border-2 border-primary-200">
-                  <p className="text-sm text-secondary-700">
+                <div className="p-3 sm:p-4 bg-primary-50 rounded-lg border-2 border-primary-200">
+                  <p className="text-xs sm:text-sm text-secondary-700">
                     🎉 <strong>Prochaine étape :</strong> Après création, nous générerons automatiquement votre QR code à afficher devant votre salon !
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setStep(2)}
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base"
                 >
                   Retour
                 </Button>
                 <Button
                   onClick={handleSubmit}
                   loading={loading}
-                  className="flex-1"
+                  className="flex-1 text-sm sm:text-base"
                 >
                   Créer mon salon
                 </Button>

@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import Logo from '@/components/Logo';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
-import { Clock, Users, Smartphone, TrendingUp, CheckCircle2, Zap, ArrowRight } from 'lucide-react';
+import { Clock, Users, Smartphone, TrendingUp, CheckCircle2, Zap, ArrowRight, Mail, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Home() {
   const { user } = useAuth();
@@ -100,9 +101,26 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right - Mock app preview */}
+            {/* Right - Image + Mock app preview */}
             <div className="relative animate-slideUp mt-4 sm:mt-8 lg:mt-0 px-2 sm:px-0">
-              <div className="relative z-10">
+              <div className="relative z-10 space-y-4">
+                {/* Image salon de coiffure */}
+                <div className="relative rounded-2xl overflow-hidden shadow-strong max-w-sm sm:max-w-md mx-auto">
+                  <Image
+                    src="/images/barbershop-hero.jpg"
+                    alt="Salon de coiffure moderne avec QueueBarber"
+                    width={600}
+                    height={400}
+                    className="w-full h-48 sm:h-64 object-cover"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 right-4 text-white">
+                    <p className="text-sm sm:text-base font-semibold">Transformez votre salon</p>
+                    <p className="text-xs sm:text-sm opacity-90">Gérez la file d&apos;attente intelligemment</p>
+                  </div>
+                </div>
+
                 <Card className="max-w-sm sm:max-w-md mx-auto" gradient>
                   <div className="space-y-3 sm:space-y-6">
                     <div className="flex items-center justify-between">
@@ -223,13 +241,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - Mobile optimized */}
-      <footer className="bg-secondary-900 text-white py-6 sm:py-12">
+      {/* Footer - Updated with contact info */}
+      <footer className="bg-secondary-900 text-white py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+          <div className="flex flex-col items-center gap-4 sm:gap-6">
             <Logo size="sm" />
-            <p className="text-secondary-400 text-xs sm:text-base text-center">
-              © 2026 QueueBarber. Fait avec ❤️ au Cameroun
+            
+            {/* Developer contact info */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-xs sm:text-sm text-secondary-400">
+              <a href="mailto:kfreddypatient@gmail.com" className="flex items-center gap-2 hover:text-primary-400 transition-colors">
+                <Mail className="w-4 h-4" />
+                kfreddypatient@gmail.com
+              </a>
+              <span className="hidden sm:inline text-secondary-600">•</span>
+              <a href="tel:+237620187495" className="flex items-center gap-2 hover:text-primary-400 transition-colors">
+                <Phone className="w-4 h-4" />
+                +237 620 18 74 95
+              </a>
+            </div>
+
+            <p className="text-secondary-500 text-xs sm:text-sm text-center">
+              © 2026 QueueBarber. Fait avec ❤️ au Cameroun par Freddy KEPTUKWA
             </p>
           </div>
         </div>
