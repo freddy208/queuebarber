@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.json',
   verification: {
-    google: 'google-site-verification=6xHpRUXBApT7AVBpEjeZwBQvBfx7t-Z8eG-7JQ_q1Cg', // TON CODE ICI
+    google: '6xHpRUXBApT7AVBpEjeZwBQvBfx7t-Z8eG-7JQ_q1Cg', // TON CODE ICI
   },
 };
 
