@@ -67,9 +67,10 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(email, password);
+      await register(email, password, name); // Passer le nom aussi
       toast.success('Compte créé avec succès ! 🎉');
-      router.push('/onboarding');
+      // Redirection vers le dashboard au lieu de /onboarding
+      router.push('/dashboard');
     } catch (err: any) {
       console.error(err);
       

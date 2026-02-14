@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
@@ -39,6 +40,9 @@ export function useSalons(ownerId?: string) {
 
       setSalons(salonsData);
       setLoading(false);
+    }, (error) => {
+      console.error('Erreur useSalons:', error);
+      setLoading(false);
     });
 
     return unsubscribe;
@@ -52,20 +56,32 @@ export function useSalon(slug: string) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSalon = async () => {
-      const q = query(collection(db, 'salons'), where('slug', '==', slug));
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0];
-        setSalon({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate() || new Date(),
-        } as Salon);
-      }
-
+    if (!slug) {
       setLoading(false);
+      return;
+    }
+
+    const fetchSalon = async () => {
+      try {
+        const q = query(collection(db, 'salons'), where('slug', '==', slug));
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+          const doc = snapshot.docs[0];
+          setSalon({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate() || new Date(),
+          } as Salon);
+        } else {
+          setSalon(null);
+        }
+      } catch (error) {
+        console.error('Erreur useSalon:', error);
+        setSalon(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchSalon();
@@ -84,21 +100,50 @@ export async function createSalon(data: {
   services: Service[];
   whatsappSupport?: string;
 }) {
-  // Vérifier si le slug existe déjà
-  const q = query(collection(db, 'salons'), where('slug', '==', data.slug));
-  const snapshot = await getDocs(q);
+  try {
+    // Validation des données requises
+    if (!data.name?.trim()) throw new Error('Le nom du salon est requis');
+    if (!data.slug?.trim()) throw new Error('Le slug est requis');
+    if (!data.ownerId?.trim()) throw new Error('L\'ID du propriétaire est requis');
+    if (!data.phone?.trim()) throw new Error('Le téléphone est requis');
+    if (!data.city?.trim()) throw new Error('La ville est requise');
+    if (!data.services || data.services.length === 0) throw new Error('Au moins un service est requis');
 
-  if (!snapshot.empty) {
-    throw new Error('Ce nom de salon est déjà utilisé');
+    // Vérifier si le slug existe déjà
+    const q = query(collection(db, 'salons'), where('slug', '==', data.slug));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      throw new Error('Ce nom de salon est déjà utilisé');
+    }
+
+    // Préparer les données
+    const salonData = {
+      name: data.name.trim(),
+      slug: data.slug.trim(),
+      ownerId: data.ownerId.trim(),
+      phone: data.phone.trim(),
+      city: data.city.trim(),
+      address: data.address?.trim() || null,
+      services: data.services.map(s => ({
+        id: s.id || Date.now().toString(),
+        name: s.name.trim(),
+        duration: Number(s.duration),
+        price: s.price ? Number(s.price) : null
+      })),
+      whatsappSupport: data.whatsappSupport?.trim() || null,
+      isOpen: true,
+      createdAt: new Date(),
+    };
+
+    console.log('Données salon à créer:', salonData);
+
+    const docRef = await addDoc(collection(db, 'salons'), salonData);
+    return docRef.id;
+  } catch (error: any) {
+    console.error('Erreur createSalon:', error);
+    throw new Error(error.message || 'Erreur lors de la création du salon');
   }
-
-  const docRef = await addDoc(collection(db, 'salons'), {
-    ...data,
-    isOpen: true,
-    createdAt: new Date(),
-  });
-
-  return docRef.id;
 }
 
 export async function updateSalon(salonId: string, data: Partial<Salon>) {

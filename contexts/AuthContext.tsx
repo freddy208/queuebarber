@@ -18,7 +18,7 @@ interface AuthContextType {
   userData: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserData({
             uid: firebaseUser.uid,
             email: firebaseUser.email!,
+            name: userDoc.data().name,
             createdAt: userDoc.data().createdAt.toDate(),
           });
         }
@@ -56,12 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, name?: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
-    // Créer le document utilisateur dans Firestore
+    // Créer le document utilisateur dans Firestore avec le nom
     await setDoc(doc(db, 'users', userCredential.user.uid), {
       email: userCredential.user.email,
+      name: name || '',
       createdAt: new Date(),
     });
   };

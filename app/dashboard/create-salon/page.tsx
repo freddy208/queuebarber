@@ -54,7 +54,7 @@ function CreateSalonContent() {
   const [phone, setPhone] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   
-  // Services
+  // Services - initialisé avec des services par défaut valides
   const [services, setServices] = useState<Service[]>([
     { id: '1', name: 'Coupe homme', duration: 20 },
     { id: '2', name: 'Barbe', duration: 15 },
@@ -84,38 +84,47 @@ function CreateSalonContent() {
   };
 
   const validateStep2 = () => {
-    if (services.length === 0) {
+    // Vérifier qu'il y a au moins un service
+    if (!services || services.length === 0) {
       toast.error('Ajoutez au moins un service');
       return false;
     }
 
-    const hasEmptyService = services.some(s => !s.name.trim() || s.duration <= 0);
-    if (hasEmptyService) {
-      toast.error('Tous les services doivent avoir un nom et une durée');
-      return false;
+    // Vérifier chaque service
+    for (const service of services) {
+      if (!service.name || !service.name.trim()) {
+        toast.error('Tous les services doivent avoir un nom');
+        return false;
+      }
+      if (!service.duration || service.duration <= 0) {
+        toast.error(`La durée du service "${service.name || 'sans nom'}" doit être supérieure à 0`);
+        return false;
+      }
     }
 
     return true;
   };
 
   const addService = () => {
-    setServices([
-      ...services,
-      { id: Date.now().toString(), name: '', duration: 15 },
-    ]);
+    const newService: Service = { 
+      id: Date.now().toString(), 
+      name: '', 
+      duration: 15 
+    };
+    setServices(prev => [...prev, newService]);
   };
 
   const removeService = (id: string) => {
-    if (services.length === 1) {
+    if (services.length <= 1) {
       toast.error('Gardez au moins un service');
       return;
     }
-    setServices(services.filter((s) => s.id !== id));
+    setServices(prev => prev.filter((s) => s.id !== id));
   };
 
   const updateService = (id: string, field: 'name' | 'duration' | 'price', value: any) => {
-    setServices(
-      services.map((s) =>
+    setServices(prev =>
+      prev.map((s) =>
         s.id === id ? { ...s, [field]: value } : s
       )
     );
@@ -125,6 +134,7 @@ function CreateSalonContent() {
     if (step === 1) {
       if (validateStep1()) {
         setStep(2);
+        setErrors({});
       }
     } else if (step === 2) {
       if (validateStep2()) {
@@ -134,37 +144,71 @@ function CreateSalonContent() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep2()) return;
+    // Validation finale avant soumission
+    if (!validateStep2()) {
+      return;
+    }
+
+    // Vérifier que l'utilisateur est connecté
+    if (!user?.uid) {
+      toast.error('Vous devez être connecté pour créer un salon');
+      return;
+    }
 
     setLoading(true);
 
     try {
       const slug = generateSlug(name);
       
-      await createSalon({
-        name,
+      // Préparer les services (s'assurer que les prix sont correctement gérés)
+      const preparedServices = services.map(s => ({
+        id: s.id,
+        name: s.name.trim(),
+        duration: Number(s.duration),
+        price: s.price ? Number(s.price) : undefined
+      }));
+
+      console.log('Création du salon avec:', {
+        name: name.trim(),
         slug,
-        ownerId: user!.uid,
-        phone,
-        city,
-        address: address || undefined,
-        services,
-        whatsappSupport: whatsapp || undefined,
+        ownerId: user.uid,
+        phone: phone.trim(),
+        city: city.trim(),
+        address: address?.trim() || undefined,
+        services: preparedServices,
+        whatsappSupport: whatsapp?.trim() || undefined,
+      });
+
+      await createSalon({
+        name: name.trim(),
+        slug,
+        ownerId: user.uid,
+        phone: phone.trim(),
+        city: city.trim(),
+        address: address?.trim() || undefined,
+        services: preparedServices,
+        whatsappSupport: whatsapp?.trim() || undefined,
       });
 
       toast.success('Salon créé avec succès ! 🎉');
       router.push('/dashboard');
     } catch (error: any) {
-      console.error(error);
-      if (error.message.includes('déjà utilisé')) {
-        toast.error('Ce nom de salon est déjà pris');
+      console.error('Erreur création salon:', error);
+      if (error.message?.includes('déjà utilisé') || error.message?.includes('slug')) {
+        toast.error('Ce nom de salon est déjà pris. Essayez un autre nom.');
       } else {
-        toast.error('Erreur lors de la création');
+        toast.error(error.message || 'Erreur lors de la création du salon');
       }
     } finally {
       setLoading(false);
     }
   };
+
+  const steps = [
+    { id: 1, label: 'Informations', shortLabel: 'Infos' },
+    { id: 2, label: 'Services', shortLabel: 'Services' },
+    { id: 3, label: 'Confirmation', shortLabel: 'Confirmer' },
+  ];
 
   return (
     <div className="min-h-screen bg-secondary-50">
@@ -181,42 +225,48 @@ function CreateSalonContent() {
           <span className="sm:hidden">Retour</span>
         </Link>
 
-        {/* Progress steps - Mobile optimized */}
+        {/* Progress steps - CORRIGÉ */}
         <div className="mb-4 sm:mb-8">
-          <div className="flex items-center justify-between mb-2 sm:mb-4">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center flex-1">
-                <div
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-sm sm:text-base ${
-                    step >= s
-                      ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-medium'
-                      : 'bg-secondary-200 text-secondary-500'
-                  }`}
-                >
-                  {step > s ? <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" /> : s}
-                </div>
-                {s < 3 && (
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            {steps.map((s, index) => (
+              <div key={s.id} className="flex items-center flex-1">
+                {/* Cercle numéro centré */}
+                <div className="flex flex-col items-center">
                   <div
-                    className={`h-1 flex-1 mx-1 sm:mx-2 rounded transition-all ${
-                      step > s ? 'bg-primary-500' : 'bg-secondary-200'
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-sm sm:text-base ${
+                      step >= s.id
+                        ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-medium'
+                        : 'bg-secondary-200 text-secondary-500'
+                    }`}
+                  >
+                    {step > s.id ? <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6" /> : s.id}
+                  </div>
+                </div>
+                
+                {/* Barre de progression (sauf dernier) */}
+                {index < steps.length - 1 && (
+                  <div
+                    className={`h-1 flex-1 mx-2 sm:mx-3 rounded transition-all ${
+                      step > s.id ? 'bg-primary-500' : 'bg-secondary-200'
                     }`}
                   ></div>
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className={step >= 1 ? 'text-primary-500 font-semibold' : 'text-secondary-500'}>
-              <span className="hidden sm:inline">Informations</span>
-              <span className="sm:hidden">Infos</span>
-            </span>
-            <span className={step >= 2 ? 'text-primary-500 font-semibold' : 'text-secondary-500'}>
-              Services
-            </span>
-            <span className={step >= 3 ? 'text-primary-500 font-semibold' : 'text-secondary-500'}>
-              <span className="hidden sm:inline">Confirmation</span>
-              <span className="sm:hidden">Confirmer</span>
-            </span>
+          
+          {/* Labels centrés sous chaque numéro */}
+          <div className="flex justify-between">
+            {steps.map((s) => (
+              <div key={s.id} className="flex-1 text-center">
+                <span className={`text-xs sm:text-sm font-semibold ${
+                  step >= s.id ? 'text-primary-500' : 'text-secondary-500'
+                }`}>
+                  <span className="hidden sm:inline">{s.label}</span>
+                  <span className="sm:hidden">{s.shortLabel}</span>
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -325,8 +375,9 @@ function CreateSalonContent() {
                             </label>
                             <Input
                               type="number"
+                              min="1"
                               placeholder="20"
-                              value={service.duration}
+                              value={service.duration || ''}
                               onChange={(e) =>
                                 updateService(
                                   service.id,
@@ -344,6 +395,7 @@ function CreateSalonContent() {
                             </label>
                             <Input
                               type="number"
+                              min="0"
                               placeholder="2000"
                               value={service.price || ''}
                               onChange={(e) =>
@@ -437,7 +489,7 @@ function CreateSalonContent() {
                         <span>{service.name}</span>
                         <span className="text-secondary-600">
                           {service.duration} min
-                          {service.price && ` • ${service.price} FCFA`}
+                          {service.price ? ` • ${service.price} FCFA` : ''}
                         </span>
                       </div>
                     ))}
@@ -462,6 +514,7 @@ function CreateSalonContent() {
                 <Button
                   onClick={handleSubmit}
                   loading={loading}
+                  disabled={loading}
                   className="flex-1 text-sm sm:text-base"
                 >
                   Créer mon salon
