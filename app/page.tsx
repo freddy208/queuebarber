@@ -79,9 +79,6 @@ export default function Home() {
                     Démarrer gratuitement
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="w-full sm:w-auto text-sm sm:text-base">
-                  Voir la démo
-                </Button>
               </div>
 
               {/* Stats - Mobile optimized */}

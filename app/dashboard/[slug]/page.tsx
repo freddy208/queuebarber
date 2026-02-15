@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
- 
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,6 +30,9 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { toggleSalonStatus } from '@/hooks/useSalon';
 import { formatWaitTime } from '@/lib/utils';
+import { doc, onSnapshot, DocumentSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Salon } from '@/types';
 
 export default function QueueManagementPage() {
   return (
@@ -46,7 +48,43 @@ function QueueManagementContent() {
   const { user } = useAuth();
   const slug = params.slug as string;
 
-  const { salon, loading: salonLoading } = useSalon(slug);
+  const { salon: initialSalon, loading: salonLoading } = useSalon(slug);
+  
+  // État local pour le salon en temps réel
+  const [salon, setSalon] = useState(initialSalon);
+  const [localLoading, setLocalLoading] = useState(true);
+
+  // Synchroniser avec le salon initial
+  useEffect(() => {
+    if (initialSalon) {
+      setSalon(initialSalon);
+      setLocalLoading(false);
+    }
+  }, [initialSalon]);
+
+  // Écoute temps réel des changements du salon
+  useEffect(() => {
+    if (!slug || !initialSalon?.id) return;
+
+    const salonRef = doc(db, 'salons', initialSalon.id);
+    
+    const unsubscribe = onSnapshot(salonRef, (docSnapshot: DocumentSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        setSalon(prev => ({
+          ...prev,
+          ...data,
+          id: docSnapshot.id,
+          isOpen: data?.isOpen ?? prev?.isOpen ?? false,
+        } as Salon));
+      }
+    }, (error) => {
+      console.error('Erreur onSnapshot salon:', error);
+    });
+
+    return () => unsubscribe();
+  }, [slug, initialSalon?.id]);
+
   const { clients, stats, loading: queueLoading } = useQueue(salon?.id || '');
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -60,7 +98,7 @@ function QueueManagementContent() {
     }
   }, [salon, salonLoading, user, router]);
 
-  if (salonLoading || queueLoading) {
+  if (salonLoading || localLoading || queueLoading) {
     return (
       <div className="min-h-screen bg-secondary-50">
         <DashboardHeader />
@@ -100,12 +138,22 @@ function QueueManagementContent() {
   const doneClients = clients.filter(c => c.status === 'done');
 
   const handleToggleStatus = async () => {
+    if (toggling) return; // Éviter les doubles clics
+    
     setToggling(true);
+    const newStatus = !salon.isOpen;
+    
     try {
-      await toggleSalonStatus(salon.id, !salon.isOpen);
-      toast.success(salon.isOpen ? 'Salon fermé' : 'Salon ouvert');
+      // Mise à jour optimiste de l'UI
+      setSalon(prev => prev ? { ...prev, isOpen: newStatus } : null);
+      
+      await toggleSalonStatus(salon.id, newStatus);
+      toast.success(newStatus ? 'Salon ouvert' : 'Salon fermé');
     } catch (error) {
+      // Rollback en cas d'erreur
+      setSalon(prev => prev ? { ...prev, isOpen: !newStatus } : null);
       toast.error('Erreur lors du changement de statut');
+      console.error(error);
     } finally {
       setToggling(false);
     }
@@ -223,8 +271,12 @@ function QueueManagementContent() {
 
         {/* Stats cards - Mobile: 2 cols, Tablet: 2 cols, Desktop: 4 cols */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-8">
-          {/* Status toggle */}
-          <Card hover className="cursor-pointer p-3 sm:p-4" onClick={handleToggleStatus}>
+          {/* Status toggle - AVEC ÉTAT LOCAL TEMPS RÉEL */}
+          <Card 
+            hover 
+            className={`cursor-pointer p-3 sm:p-4 transition-all ${toggling ? 'opacity-75' : ''}`} 
+            onClick={handleToggleStatus}
+          >
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm text-secondary-600 mb-0.5 sm:mb-1">Statut</p>
@@ -240,6 +292,11 @@ function QueueManagementContent() {
                 )}
               </div>
             </div>
+            {toggling && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50 rounded-lg">
+                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </Card>
 
           <Card className="p-3 sm:p-4">

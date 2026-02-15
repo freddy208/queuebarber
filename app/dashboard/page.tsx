@@ -2,9 +2,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSalons } from '@/hooks/useSalon';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DashboardHeader from '@/components/DashboardHeader';
 import Button from '@/components/Button';
@@ -18,10 +20,93 @@ import {
   ExternalLink,
   Settings,
   QrCode,
-  BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { formatWaitTime } from '@/lib/utils';
+
+// Hook personnalisé pour les statistiques globales
+function useDashboardStats(ownerId?: string) {
+  const [stats, setStats] = useState({
+    totalClientsToday: 0,
+    avgWaitTime: 0,
+    satisfactionRate: 0,
+    loading: true
+  });
+
+  useEffect(() => {
+    if (!ownerId) {
+      setStats(prev => ({ ...prev, loading: false }));
+      return;
+    }
+
+    // Récupérer tous les salons de l'utilisateur
+    const salonsQuery = query(collection(db, 'salons'), where('ownerId', '==', ownerId));
+    
+    const unsubscribe = onSnapshot(salonsQuery, async (salonsSnapshot) => {
+      const salonIds = salonsSnapshot.docs.map(doc => doc.id);
+      
+      if (salonIds.length === 0) {
+        setStats({ totalClientsToday: 0, avgWaitTime: 0, satisfactionRate: 0, loading: false });
+        return;
+      }
+
+      // Calculer les stats pour aujourd'hui
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let totalClients = 0;
+      let totalWaitTime = 0;
+      let totalServed = 0;
+      let satisfiedClients = 0;
+
+      // Pour chaque salon, récupérer les clients d'aujourd'hui
+      for (const salonId of salonIds) {
+        const queueQuery = query(
+          collection(db, 'salons', salonId, 'queue'),
+          where('joinedAt', '>=', today)
+        );
+        
+        try {
+          const queueSnapshot = await getDocs(queueQuery);
+          
+          queueSnapshot.docs.forEach(doc => {
+            const client = doc.data();
+            totalClients++;
+            
+            if (client.status === 'done') {
+              totalServed++;
+              // Considérer comme satisfait si pas de plainte et temps raisonnable
+              if (client.serviceDuration && client.serviceDuration < 60) {
+                satisfiedClients++;
+              }
+            }
+            
+            if (client.estimatedWaitTime) {
+              totalWaitTime += client.estimatedWaitTime;
+            }
+          });
+        } catch (error) {
+          console.error(`Erreur récupération queue pour salon ${salonId}:`, error);
+        }
+      }
+
+      const avgWait = totalClients > 0 ? Math.round(totalWaitTime / totalClients) : 0;
+      const satisfaction = totalServed > 0 ? Math.round((satisfiedClients / totalServed) * 100) : 0;
+
+      setStats({
+        totalClientsToday: totalClients,
+        avgWaitTime: avgWait,
+        satisfactionRate: satisfaction,
+        loading: false
+      });
+    });
+
+    return () => unsubscribe();
+  }, [ownerId]);
+
+  return stats;
+}
 
 export default function DashboardPage() {
   return (
@@ -33,10 +118,11 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { user } = useAuth();
-  const { salons, loading } = useSalons(user?.uid);
+  const { salons, loading: salonsLoading } = useSalons(user?.uid);
+  const stats = useDashboardStats(user?.uid);
   const router = useRouter();
 
-  if (loading) {
+  if (salonsLoading || stats.loading) {
     return (
       <div className="min-h-screen bg-secondary-50">
         <DashboardHeader />
@@ -67,7 +153,7 @@ function DashboardContent() {
           </p>
         </div>
 
-        {/* Stats cards - Mobile: 2 cols, Tablet: 2 cols, Desktop: 4 cols */}
+        {/* Stats cards - DONNÉES DYNAMIQUES RÉELLES */}
         {salons.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-8">
             <StatsCard
@@ -79,22 +165,22 @@ function DashboardContent() {
             <StatsCard
               icon={Users}
               label="Clients aujourd'hui"
-              value="24"
-              trend="+12%"
+              value={stats.totalClientsToday}
+              trend={stats.totalClientsToday > 0 ? `+${stats.totalClientsToday}` : '0'}
               color="success"
             />
             <StatsCard
               icon={Clock}
-              label="Temps d'attente"
-              value="25min"
-              trend="-5min"
+              label="Temps d'attente moyen"
+              value={formatWaitTime(stats.avgWaitTime)}
+              trend={stats.avgWaitTime > 0 ? `${stats.avgWaitTime}min` : '-'}
               color="warning"
             />
             <StatsCard
               icon={TrendingUp}
               label="Satisfaction"
-              value="94%"
-              trend="+3%"
+              value={`${stats.satisfactionRate}%`}
+              trend={stats.satisfactionRate > 80 ? 'Excellent' : stats.satisfactionRate > 50 ? 'Bon' : 'À améliorer'}
               color="info"
             />
           </div>
@@ -159,8 +245,8 @@ function StatsCard({
           <p className="text-xs sm:text-sm text-secondary-600 mb-0.5 sm:mb-1 truncate">{label}</p>
           <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-secondary-900 mb-0.5 sm:mb-2">{value}</p>
           {trend && (
-            <p className={`text-xs sm:text-sm font-semibold ${trend.startsWith('+') ? 'text-success' : 'text-error'}`}>
-              {trend} <span className="hidden sm:inline">vs hier</span>
+            <p className={`text-xs sm:text-sm font-semibold ${color === 'success' ? 'text-success' : color === 'warning' ? 'text-warning' : 'text-info'}`}>
+              {trend}
             </p>
           )}
         </div>
@@ -172,9 +258,46 @@ function StatsCard({
   );
 }
 
-// Salon Card Component - Mobile optimized
+// Salon Card avec stats en temps réel
 function SalonCard({ salon }: { salon: any }) {
   const router = useRouter();
+  const [liveStats, setLiveStats] = useState({
+    waiting: 0,
+    todayTotal: 0
+  });
+
+  // Écoute temps réel de la file d'attente
+  useEffect(() => {
+    if (!salon.id) return;
+
+    const queueQuery = query(collection(db, 'salons', salon.id, 'queue'));
+    
+    const unsubscribe = onSnapshot(queueQuery, (snapshot) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let waiting = 0;
+      let todayTotal = 0;
+
+      snapshot.docs.forEach(doc => {
+        const client = doc.data();
+        
+        // Compter les clients en attente
+        if (client.status === 'waiting') {
+          waiting++;
+        }
+        
+        // Compter les clients d'aujourd'hui
+        if (client.joinedAt?.toDate() >= today) {
+          todayTotal++;
+        }
+      });
+
+      setLiveStats({ waiting, todayTotal });
+    });
+
+    return () => unsubscribe();
+  }, [salon.id]);
 
   return (
     <Card hover className="group cursor-pointer p-3 sm:p-4" onClick={() => router.push(`/dashboard/${salon.slug}`)}>
@@ -199,6 +322,18 @@ function SalonCard({ salon }: { salon: any }) {
           <p className="text-xs sm:text-sm text-secondary-600 truncate">
             📞 {salon.phone}
           </p>
+        </div>
+      </div>
+
+      {/* Stats en temps réel du salon */}
+      <div className="grid grid-cols-2 gap-2 mb-3 sm:mb-4">
+        <div className="bg-primary-50 rounded-lg p-2 text-center">
+          <p className="text-xs text-secondary-600">En attente</p>
+          <p className="text-lg font-bold text-primary-600">{liveStats.waiting}</p>
+        </div>
+        <div className="bg-secondary-50 rounded-lg p-2 text-center">
+          <p className="text-xs text-secondary-600">Aujourd&apos;hui</p>
+          <p className="text-lg font-bold text-secondary-700">{liveStats.todayTotal}</p>
         </div>
       </div>
 
